@@ -1,0 +1,176 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Serial Monitor</title><style>
+:root{--bg:#f4f5f7;--cd:#fff;--tx:#1c2025;--mu:#6b7480;--bd:#d8dce2;--ac:#2563eb;--rx:#0f766e;--txc:#b45309;--sy:#7c3aed;--er:#dc2626;--ok:#16a34a;--sh:0 2px 10px #0002;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1216;--cd:#171b21;--tx:#e5e8ec;--mu:#8f99a6;--bd:#2b323b;--ac:#6ea0ff;--rx:#4fd1c5;--txc:#fbbf24;--sy:#b79cff;--er:#f87171;--ok:#4ade80;--sh:0 2px 14px #0008;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0f1216;--cd:#171b21;--tx:#e5e8ec;--mu:#8f99a6;--bd:#2b323b;--ac:#6ea0ff;--rx:#4fd1c5;--txc:#fbbf24;--sy:#b79cff;--er:#f87171;--ok:#4ade80;--sh:0 2px 14px #0008;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+select,input,button,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:5px 9px}
+button{cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.12s}button:hover:not(:disabled){border-color:var(--ac)}button:disabled,select:disabled,input:disabled{opacity:.5;cursor:not-allowed}
+button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+header{background:var(--cd);border-bottom:1px solid var(--bd);padding:8px 14px;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;align-items:center;gap:10px}.top h1{font-size:16px;margin:0}.sp{flex:1}
+#conn{font-weight:600;color:#fff;background:var(--ok);border-color:var(--ok);padding:6px 14px}#conn.d{background:var(--er);border-color:var(--er)}#conn svg{width:18px;height:18px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mu)}.dot.on{background:var(--ok);box-shadow:0 0 0 3px #16a34a33}
+.cfg{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end}.g{display:flex;flex-direction:column;gap:3px}.lbl{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}.wb{display:flex;gap:4px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}.seg button{border:0;border-radius:0;background:var(--bg)}.seg button.on{background:var(--ac)}
+.baud{position:relative;display:flex;align-items:center;border:1px solid var(--bd);border-radius:10px;background:var(--bg);overflow:visible}
+.baud>button{border:0;border-radius:0;padding:6px 10px;font-weight:700}.baud .pill{flex-direction:column;gap:0;align-items:center;min-width:104px;line-height:1.1;padding:3px 8px}
+.pill b{font:700 17px ui-monospace,monospace}.pill small{color:var(--mu);font-size:10px;text-transform:uppercase}
+#bpop{position:absolute;top:calc(100% + 6px);left:0;z-index:20;background:var(--cd);border:1px solid var(--bd);border-radius:12px;box-shadow:var(--sh);padding:10px;width:270px}
+#chips{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}#chips button{justify-content:center;padding:5px 0;font:13px ui-monospace,monospace}
+.sw{display:inline-flex;align-items:center;gap:6px;height:32px;cursor:pointer}
+#pinfo{padding:5px 14px;font-size:12px;color:var(--mu);background:var(--cd);border-bottom:1px solid var(--bd);display:flex;gap:16px;flex-wrap:wrap}#pinfo b{color:var(--tx);font-family:ui-monospace,monospace}
+.bar{padding:6px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--bd)}.q{display:flex;gap:4px;flex-wrap:wrap}.q button{padding:2px 8px;border-radius:99px;font-size:12px}
+main{flex:1;display:flex;flex-direction:column;min-height:0}
+#plot{flex:0 0 46%;min-height:150px;background:var(--cd);display:flex;flex-direction:column}
+#pt{padding:5px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px}#leg{display:flex;gap:12px;flex-wrap:wrap}#leg label{display:inline-flex;gap:4px;align-items:center;cursor:pointer;font-family:ui-monospace,monospace}
+#cvw{flex:1;min-height:0;position:relative}canvas{width:100%;height:100%;display:block;cursor:crosshair}
+#spl{height:7px;cursor:row-resize;background:var(--bd);opacity:.5}#spl:hover{opacity:1;background:var(--ac)}
+#wrap{flex:1;overflow:auto;background:var(--cd);min-height:60px}table{width:100%;border-collapse:collapse;font:13px ui-monospace,Menlo,Consolas,monospace}
+th{position:sticky;top:0;background:var(--cd);text-align:left;color:var(--mu);padding:5px 10px;border-bottom:1px solid var(--bd)}td{padding:2px 10px;white-space:pre-wrap;word-break:break-all}
+tr{cursor:pointer}tr:hover td{background:var(--bg)}tr.sel td{background:#2563eb33}.RX td:nth-child(4){color:var(--rx)}.TX td:nth-child(4){color:var(--txc)}.SYS td{color:var(--sy)}.mu{color:var(--mu)}
+body.o-print #plot,body.o-print #spl{display:none}body.o-plot #wrap,body.o-plot #spl{display:none}body.o-plot #plot{flex:1}
+footer{padding:5px 14px;font-size:12px;color:var(--mu);border-top:1px solid var(--bd);display:flex;gap:14px;flex-wrap:wrap}
+#hb{display:none;background:var(--sy);color:#fff;padding:5px 14px;align-items:center;gap:10px}#hb button{padding:1px 8px}
+#toast{position:fixed;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px;z-index:50}#toast div{background:var(--cd);border:1px solid var(--bd);border-left:4px solid var(--ac);border-radius:8px;padding:8px 12px;box-shadow:var(--sh)}#toast .e{border-left-color:var(--er)}
+#dbm{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:40}#dbc{background:var(--cd);border:1px solid var(--bd);border-radius:14px;width:min(920px,94vw);max-height:88vh;overflow:auto;padding:16px;box-shadow:var(--sh)}
+#dbc table{font-size:12px}#dbc td,#dbc th{padding:3px 8px;border-bottom:1px solid var(--bd)}textarea{width:100%;font:12px ui-monospace,monospace;min-height:56px}
+</style></head><body class="o-both">
+<header>
+<div class="top"><h1>🔌 Serial Monitor</h1><span class="dot" id="dot"></span><span id="st" class="mu">disconnected</span><span class="sp"></span>
+<button id="dbb">🗄 Database</button><button id="th" title="Toggle theme">◐</button><button id="conn"></button></div>
+<div class="cfg">
+<div class="g"><span class="lbl">Port (COM / tty)</span><span class="wb"><select id="port" style="max-width:290px"></select><button id="ref" title="Rescan ports">↻</button></span></div>
+<div class="g"><span class="lbl">Baud rate</span><div class="baud"><button id="bm" title="Lower">◀</button><button class="pill" id="bv" title="Click for presets · scroll to step"><b id="bn">115200</b><small>baud</small></button><button id="bp" title="Higher">▶</button>
+<div id="bpop" hidden><div id="chips"></div><div class="wb"><input id="bc" type="number" placeholder="Custom baud" style="flex:1;min-width:0"><button id="bok" class="on">Set</button></div></div></div></div>
+<div class="g"><span class="lbl">Frame</span><span class="wb"><select id="dbits" title="Data bits"><option>8</option><option>7</option><option>6</option><option>5</option></select><select id="par" title="Parity"><option value="N">None</option><option value="E">Even</option><option value="O">Odd</option><option value="M">Mark</option><option value="S">Space</option></select><select id="sb" title="Stop bits"><option>1</option><option>1.5</option><option>2</option></select></span></div>
+<div class="g"><span class="lbl">Input</span><select id="mode"><option value="text">Text lines</option><option value="hex">Hex</option></select></div>
+<div class="g"><span class="lbl">Output</span><div class="seg" id="out"><button data-o="print">Print</button><button data-o="plot">Plot</button><button data-o="both" class="on">Both</button></div></div>
+<div class="g"><span class="lbl">Log file</span><select id="fmt"><option value="csv">CSV</option><option value="json">JSON</option><option value="txt">TXT</option><option value="bin">BIN</option><option value="off">Off</option></select></div>
+<div class="g"><span class="lbl">SQLite</span><label class="sw"><input type="checkbox" id="usedb"> store session</label></div>
+</div></header>
+<div id="pinfo"></div>
+<div class="bar"><input id="msg" placeholder="Send… (↑/↓ history)" style="flex:1;min-width:140px"><select id="eol"><option value="&#10;">LF</option><option value="&#13;&#10;">CRLF</option><option value="&#13;">CR</option><option value="">none</option></select><button id="send" class="on">Send</button><button id="star" title="Save as quick command">★</button><span class="q" id="qs"></span>
+<input id="flt" placeholder="Filter…" size="11"><label class="sw"><input type="checkbox" id="as" checked> follow</label><button id="pz">⏸ Pause</button><button id="clr">Clear</button>
+<select id="xf"><option value="csv">CSV</option><option value="json">JSON</option><option value="txt">TXT</option><option value="bin">BIN</option></select><a id="exp" href="/api/log?fmt=csv"><button>⬇ Export</button></a></div>
+<div id="hb"><span id="ht"></span><button id="live">Back to live</button></div>
+<main><div id="plot"><div id="pt"><b>Plotter</b><label>Window <select id="win"><option value="10">10 s</option><option value="30" selected>30 s</option><option value="60">60 s</option><option value="300">5 min</option><option value="0">all</option></select></label>
+<button id="fol" class="on">● Live</button><button id="cp">Clear plot</button><span class="mu">wheel = zoom · drag = pan · dbl-click = live · click a row to mark</span><span id="leg"></span></div><div id="cvw"><canvas id="cv"></canvas></div></div>
+<div id="spl"></div><div id="wrap"><table><thead><tr><th>#</th><th>Timestamp</th><th>Δ s</th><th>Dir</th><th>Data</th></tr></thead><tbody id="tb"></tbody></table></div></main>
+<footer><span id="cnt">0 records</span><span id="rate">0/s</span><span id="by">0 bytes</span><span id="lp"></span><span id="sk" style="color:var(--er)"></span></footer>
+<div id="toast"></div>
+<div id="dbm"><div id="dbc"><div class="wb" style="margin-bottom:10px"><b style="font-size:16px">🗄 SQLite database</b><span class="sp" style="flex:1"></span><button id="dbx">✕</button></div>
+<div class="wb" style="margin-bottom:10px"><input id="dbp" style="flex:1" placeholder="path/to/file.db"><button id="dbs" class="on">Use path</button><button id="dbr">↻ Sessions</button></div>
+<div id="dbi" class="mu" style="margin-bottom:8px"></div><div style="overflow:auto;max-height:240px"><table id="dbt"></table></div>
+<div class="lbl" style="margin:12px 0 4px">SQL (read-only, SELECT)</div><textarea id="sql">SELECT dir, COUNT(*) AS n, MIN(t) AS first, MAX(t) AS last FROM records GROUP BY dir</textarea>
+<div class="wb" style="margin:6px 0"><button id="runq" class="on">Run</button><span id="qi" class="mu"></span></div><div style="overflow:auto;max-height:240px"><table id="qt"></table></div></div></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m,e){const d=document.createElement('div');d.textContent=m;if(e)d.className='e';$('#toast').appendChild(d);setTimeout(()=>d.remove(),3800)}
+async function api(p,b){try{const r=await fetch(p,{method:b?'POST':'GET',body:b?JSON.stringify(b):undefined,signal:AbortSignal.timeout(8000)});return await r.json()}catch(e){return{error:'request failed: '+e.message}}}
+let mode='text',connected=false,paused=false,out='both',plist=[],hist=false,n=0,P=[],raf=0,H=[],lastN=0;
+/* ---------- baud widget ---------- */
+const PRE=[300,1200,2400,4800,9600,19200,38400,57600,115200,230400,460800,921600,1000000,2000000];let baud=115200;
+function setBaud(v){v=+v;if(!(v>=50&&v<=4000000)){toast('Baud must be 50 – 4,000,000',1);return}baud=v;$('#bn').textContent=v;
+$('#chips').innerHTML='';PRE.forEach(p=>{const b=document.createElement('button');b.textContent=p;if(p===v)b.className='on';b.onclick=()=>{setBaud(p);$('#bpop').hidden=true};$('#chips').appendChild(b)})}
+function step(d){let t=null;if(d>0)t=PRE.find(p=>p>baud);else PRE.forEach(p=>{if(p<baud)t=p});if(t)setBaud(t)}
+$('#bm').onclick=()=>step(-1);$('#bp').onclick=()=>step(1);$('#bv').onclick=()=>{if(!$('#bv').disabled)$('#bpop').hidden=!$('#bpop').hidden};
+$('#bv').onwheel=e=>{if($('#bv').disabled)return;e.preventDefault();step(e.deltaY<0?1:-1)};$('#bok').onclick=()=>{setBaud($('#bc').value);$('#bpop').hidden=true};
+document.addEventListener('mousedown',e=>{if(!e.target.closest('.baud'))$('#bpop').hidden=true});
+/* ---------- ports ---------- */
+function pinfo(){const p=plist.find(x=>x.dev===$('#port').value);$('#pinfo').innerHTML=p?`<span>Port <b>${esc(p.dev)}</b></span><span>VID <b>${p.vid||'—'}</b></span><span>PID <b>${p.pid||'—'}</b></span><span>Product <b>${esc(p.desc||'—')}</b></span><span>Maker <b>${esc(p.mfr||'—')}</b></span><span>Serial# <b>${esc(p.sn||'—')}</b></span>`:'No port'}
+async function ports(r){const cur=$('#port').value,l=await api('/api/ports'+(r?'?refresh=1':''));if(l.error)return;plist=l;const s=$('#port');s.innerHTML='';l.forEach(x=>{const o=document.createElement('option');o.value=x.dev;o.textContent=`${x.dev} · ${x.vid&&x.pid?x.vid+':'+x.pid:'no USB id'} · ${x.desc}`;s.appendChild(o)});if(l.some(x=>x.dev===cur))s.value=cur;pinfo()}
+$('#port').onchange=pinfo;$('#ref').onclick=()=>ports(1);
+/* ---------- ingest pipeline (batched, rAF-driven: never blocks the UI) ---------- */
+const MAXROWS=1500,DRAW=300;
+function enqueue(a){for(const r of a)P.push(r);if(P.length>200000)P.splice(0,P.length-200000);if(!raf&&!paused)raf=requestAnimationFrame(pump)}
+function pump(){raf=0;if(paused||!P.length)return;const b=P;P=[];ingest(b)}
+function ingest(b){n+=b.length;for(const r of b)H.push(r);if(H.length>60000)H.splice(0,20000);
+if(out!=='plot'){const tb=$('#tb'),f=document.createDocumentFragment(),from=Math.max(0,b.length-DRAW);for(let i=from;i<b.length;i++)f.appendChild(row(b[i]));tb.appendChild(f);while(tb.rows.length>MAXROWS)tb.removeChild(tb.firstChild);if($('#as').checked)$('#wrap').scrollTop=1e9;
+$('#sk').textContent=from?`${from} rows not drawn in this burst (all are logged)`:''}
+if(out!=='print')for(const r of b)feed(r);$('#cnt').textContent=n+' records'}
+function row(r){const t=document.createElement('tr');t.className=r.dir;t.dataset.t=r.t;[r.seq,r.ts,r.delta.toFixed(3),r.dir,r.text].forEach(v=>{const d=document.createElement('td');d.textContent=v;t.appendChild(d)});const f=$('#flt').value.toLowerCase();if(f&&!r.text.toLowerCase().includes(f))t.hidden=true;return t}
+function rebuildTable(){const tb=$('#tb');tb.innerHTML='';const f=document.createDocumentFragment();H.slice(-DRAW).forEach(r=>f.appendChild(row(r)));tb.appendChild(f)}
+function rebuildPlot(){clearPlot();H.forEach(feed)}
+let es;function stream(){if(es)es.close();P=[];es=new EventSource('/api/stream');es.onmessage=e=>enqueue(JSON.parse(e.data).r)}
+function resetView(){P=[];H=[];n=0;$('#tb').innerHTML='';$('#cnt').textContent='0 records';clearPlot()}
+/* ---------- plotter ---------- */
+const COL=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#65a30d'],CAP=50000,L=54,Rm=10,Tp=8,Bm=22;
+const RXR=/([A-Za-z_]\w*)\s*[=:]\s*(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)/g,NUM=/-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?/g;
+let ch={},order=[],T0=null,lastT=0,pd=false,view={f:1,a:0,b:10},cur={a:0,b:10},mx=null,mark=null,drag=null;
+const sched=()=>{if(!pd){pd=true;requestAnimationFrame(draw)}};
+function push(k,t,v){if(!isFinite(v))return;let c=ch[k];if(!c){c=ch[k]={k,t:[],v:[],hide:false,col:COL[order.length%8]};order.push(k);const l=document.createElement('label');l.style.color=c.col;l.innerHTML=`<input type="checkbox" checked>${esc(k)} <b></b>`;l.firstChild.onchange=e=>{c.hide=!e.target.checked;sched()};c.el=l.lastChild;$('#leg').appendChild(l)}
+c.t.push(t);c.v.push(v);if(c.t.length>CAP*1.5){c.t.splice(0,CAP/2);c.v.splice(0,CAP/2)}}
+function feed(r){if(r.dir!=='RX'||mode==='hex'||r.text.includes('[partial]'))return;if(T0===null)T0=r.t;const rel=r.t-T0;let m,g=0;RXR.lastIndex=0;
+while((m=RXR.exec(r.text))){push(m[1],rel,+m[2]);g++}if(!g){NUM.lastIndex=0;while((m=NUM.exec(r.text)))push('ch'+(++g),rel,+m[0])}if(g){lastT=rel;sched()}}
+function clearPlot(){ch={};order=[];$('#leg').innerHTML='';T0=null;lastT=0;mark=null;sched()}
+const bsr=(a,x)=>{let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;a[m]<x?lo=m+1:hi=m}return lo};
+const fm=v=>+(+v).toPrecision(5);
+function draw(){pd=false;const c=$('#cv'),W=c.clientWidth,H2=c.clientHeight;if(!W||!H2)return;const d=devicePixelRatio||1;if(c.width!==W*d||c.height!==H2*d){c.width=W*d;c.height=H2*d}
+const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,W,H2);const cs=getComputedStyle(document.body),mu=cs.getPropertyValue('--mu'),gr=cs.getPropertyValue('--bd'),cd=cs.getPropertyValue('--cd'),tx=cs.getPropertyValue('--tx');
+const w=+$('#win').value;let a,b;if(view.f){if(w){b=Math.max(lastT,w);a=b-w}else{a=0;b=Math.max(lastT,1)}}else{a=view.a;b=view.b}cur={a,b};
+$('#fol').className=view.f?'on':'';const pw=W-L-Rm,ph=H2-Tp-Bm;let lo=Infinity,hi=-Infinity;const vis=order.map(k=>ch[k]).filter(c=>!c.hide);
+vis.forEach(c=>{c.i0=Math.max(0,bsr(c.t,a)-1);c.i1=Math.min(c.t.length,bsr(c.t,b)+1);c.lo=Infinity;c.hi=-Infinity;for(let i=c.i0;i<c.i1;i++){const v=c.v[i];if(v<c.lo)c.lo=v;if(v>c.hi)c.hi=v}if(c.lo<lo)lo=c.lo;if(c.hi>hi)hi=c.hi});
+order.forEach(k=>{const c=ch[k],l=c.v.length?c.v[c.v.length-1]:'';c.el.textContent=fm(l)+(c.lo<Infinity?` [${fm(c.lo)}…${fm(c.hi)}]`:'')});
+x.font='11px system-ui';x.fillStyle=mu;if(lo===Infinity){x.fillText('waiting for numeric data…',L+10,Tp+20);return}if(lo===hi){lo-=1;hi+=1}const pad=(hi-lo)*.07;lo-=pad;hi+=pad;
+const X=t=>L+(t-a)/(b-a)*pw,Y=v=>Tp+ph-(v-lo)/(hi-lo)*ph;x.strokeStyle=gr;x.lineWidth=1;x.textAlign='right';
+for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);x.beginPath();x.moveTo(L,y);x.lineTo(W-Rm,y);x.stroke();x.fillText(fm(v),L-6,y+4)}
+x.textAlign='center';for(let i=0;i<=5;i++){const t=a+(b-a)*i/5,px=X(t);x.beginPath();x.moveTo(px,Tp);x.lineTo(px,Tp+ph);x.stroke();x.fillText(t.toFixed(1)+'s',px,H2-6)}
+x.save();x.beginPath();x.rect(L,Tp,pw,ph);x.clip();x.lineWidth=1.6;
+vis.forEach(c=>{x.strokeStyle=c.col;x.beginPath();const cnt=c.i1-c.i0;if(cnt<=pw*2){for(let i=c.i0;i<c.i1;i++){const px=X(c.t[i]),py=Y(c.v[i]);i===c.i0?x.moveTo(px,py):x.lineTo(px,py)}}
+else{let lc=null,mn=0,mxv=0,first=true;const fl=()=>{if(lc===null)return;first?x.moveTo(lc,Y(mn)):x.lineTo(lc,Y(mn));x.lineTo(lc,Y(mxv));first=false};
+for(let i=c.i0;i<c.i1;i++){const col=Math.floor(X(c.t[i])),v=c.v[i];if(col!==lc){fl();lc=col;mn=mxv=v}else{if(v<mn)mn=v;if(v>mxv)mxv=v}}fl()}x.stroke()});
+if(mark!==null&&mark>=a&&mark<=b){x.strokeStyle='#d97706';x.setLineDash([5,4]);x.beginPath();x.moveTo(X(mark),Tp);x.lineTo(X(mark),Tp+ph);x.stroke();x.setLineDash([])}x.restore();
+if(mark!==null&&mark>=a&&mark<=b){x.fillStyle='#d97706';x.textAlign='left';x.fillText('◆ '+mark.toFixed(2)+'s',X(mark)+4,Tp+12)}
+if(mx!==null&&mx>=L&&mx<=W-Rm){const tt=a+(mx-L)/pw*(b-a);x.strokeStyle=mu;x.beginPath();x.moveTo(mx,Tp);x.lineTo(mx,Tp+ph);x.stroke();
+const lines=[`t = ${tt.toFixed(2)} s`];vis.forEach(c=>{let i=bsr(c.t,tt);if(i>0&&(i>=c.t.length||tt-c.t[i-1]<c.t[i]-tt))i--;if(c.t.length){lines.push([c.col,`${c.k}: ${fm(c.v[i])}`]);x.fillStyle=c.col;x.beginPath();x.arc(X(c.t[i]),Y(c.v[i]),3.5,0,7);x.fill()}});
+const bw=130,bh=8+lines.length*15,bx=mx+14+bw>W?mx-bw-14:mx+14;x.fillStyle=cd;x.strokeStyle=gr;x.beginPath();x.rect(bx,Tp+4,bw,bh);x.fill();x.stroke();x.textAlign='left';
+lines.forEach((l,i)=>{x.fillStyle=Array.isArray(l)?l[0]:tx;x.fillText(Array.isArray(l)?l[1]:l,bx+8,Tp+19+i*15)})}}
+const cv=$('#cv');cv.onmousemove=e=>{const r=cv.getBoundingClientRect();mx=e.clientX-r.left;if(drag){const pw=r.width-L-Rm,dt=(e.clientX-drag.x)/pw*(drag.b-drag.a);view={f:0,a:drag.a-dt,b:drag.b-dt}}sched()};
+cv.onmouseleave=()=>{mx=null;drag=null;sched()};cv.onmouseup=()=>drag=null;cv.onmousedown=e=>{drag={x:e.clientX,a:cur.a,b:cur.b}};
+cv.onwheel=e=>{e.preventDefault();const r=cv.getBoundingClientRect(),f=Math.min(1,Math.max(0,(e.clientX-r.left-L)/(r.width-L-Rm))),k=e.deltaY<0?.8:1.25,t=cur.a+f*(cur.b-cur.a);view={f:0,a:t-(t-cur.a)*k,b:t+(cur.b-t)*k};sched()};
+cv.ondblclick=()=>{view.f=1;sched()};$('#fol').onclick=()=>{view.f=1;sched()};$('#win').onchange=()=>{view.f=1;sched()};$('#cp').onclick=clearPlot;addEventListener('resize',sched);
+$('#tb').onclick=e=>{const tr=e.target.closest('tr');if(!tr||T0===null)return;document.querySelectorAll('tr.sel').forEach(x=>x.classList.remove('sel'));tr.classList.add('sel');mark=+tr.dataset.t-T0;
+if(mark<cur.a||mark>cur.b){const s=cur.b-cur.a;view={f:0,a:mark-s/2,b:mark+s/2}}sched()};
+/* ---------- output mode, split, theme ---------- */
+function setOut(o){const prev=out;out=o;document.body.className='o-'+o;if(o==='plot')$('#plot').style.flex='';document.querySelectorAll('#out button').forEach(b=>b.className=b.dataset.o===o?'on':'');
+if(prev==='plot'&&o!=='plot')rebuildTable();if(prev==='print'&&o!=='print')rebuildPlot();setTimeout(sched,0)}
+document.querySelectorAll('#out button').forEach(b=>b.onclick=()=>setOut(b.dataset.o));
+$('#spl').onmousedown=e=>{const m=$('main').getBoundingClientRect(),mv=ev=>{$('#plot').style.flex='0 0 '+Math.max(110,Math.min(m.height-90,ev.clientY-m.top))+'px';sched()},up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up)};addEventListener('mousemove',mv);addEventListener('mouseup',up);e.preventDefault()};
+$('#th').onclick=()=>{const d=document.documentElement,dark=getComputedStyle(document.body).colorScheme==='dark';d.dataset.theme=dark?'light':'dark';sched()};
+/* ---------- connection, send, controls ---------- */
+const PLUG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/>';let busy=false;
+async function status(){if(busy)return;busy=true;try{const s=await api('/api/status');if(s.error)return;connected=s.connected;if(s.cfg.mode)mode=s.cfg.mode;$('#dot').className='dot'+(s.connected?' on':'');
+$('#st').textContent=s.connected?`${s.cfg.port} @ ${s.cfg.baud} ${s.cfg.frame}${s.cfg.db?' · SQLite #'+s.sid:''}`:(s.err||'disconnected');
+$('#conn').className=s.connected?'d':'';$('#conn').innerHTML=s.connected?PLUG+'<path d="M3 3l18 18"/></svg> Disconnect':PLUG+'</svg> Connect';
+['port','mode','fmt','usedb','dbits','par','sb','bm','bp','bv','ref'].forEach(i=>$('#'+i).disabled=s.connected);$('#by').textContent=s.bytes+' bytes';$('#lp').textContent=s.logpath?'file → '+s.logpath:'';
+$('#rate').textContent=(n-lastN)+'/s';lastN=n;if(s.sinkerr)$('#sk').textContent='storage: '+s.sinkerr;else if(s.dropped)$('#sk').textContent='storage dropped '+s.dropped+' records';if(!$('#dbp').value)$('#dbp').value=s.dbpath}finally{busy=false}}
+$('#conn').onclick=async()=>{if(connected){await api('/api/disconnect',{})}else{hist=false;$('#hb').style.display='none';mode=$('#mode').value;
+const r=await api('/api/connect',{port:$('#port').value,baud,mode,fmt:$('#fmt').value,db:$('#usedb').checked,bytesize:$('#dbits').value,parity:$('#par').value,stopbits:$('#sb').value});if(r.error)toast(r.error,1);else{resetView();stream()}}status()};
+let hs=[],hi=0,qs=JSON.parse(localStorage.getItem('sm_q')||'[]');
+async function send(t){t=t??$('#msg').value;if(!t&&$('#eol').value==='')return;const r=await api('/api/send',{data:t,eol:$('#eol').value});if(r.error)toast(r.error,1);else if(t){hs.push(t);hi=hs.length}if(t===$('#msg').value)$('#msg').value=''}
+function rq(){$('#qs').innerHTML='';qs.forEach(c=>{const b=document.createElement('button');b.textContent=c;b.title='Click to send · right-click to remove';b.onclick=()=>send(c);b.oncontextmenu=e=>{e.preventDefault();qs=qs.filter(x=>x!==c);localStorage.setItem('sm_q',JSON.stringify(qs));rq()};$('#qs').appendChild(b)})}
+$('#star').onclick=()=>{const t=$('#msg').value.trim();if(t&&!qs.includes(t)){qs.push(t);localStorage.setItem('sm_q',JSON.stringify(qs));rq()}};rq();
+$('#send').onclick=()=>send();$('#msg').onkeydown=e=>{if(e.key==='Enter')send();else if(e.key==='ArrowUp'&&hi>0)$('#msg').value=hs[--hi];else if(e.key==='ArrowDown'){hi=Math.min(hs.length,hi+1);$('#msg').value=hs[hi]||''}};
+$('#clr').onclick=resetView;$('#pz').onclick=()=>{paused=!paused;$('#pz').textContent=paused?'▶ Resume':'⏸ Pause';if(!paused)raf=requestAnimationFrame(pump)};
+$('#flt').oninput=()=>{const f=$('#flt').value.toLowerCase();[...$('#tb').rows].forEach(t=>t.hidden=!!f&&!t.cells[4].textContent.toLowerCase().includes(f))};
+$('#xf').onchange=()=>$('#exp').href='/api/log?fmt='+$('#xf').value;
+addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(e.code==='Space'){e.preventDefault();$('#pz').click()}else if(e.ctrlKey&&e.key==='l'){e.preventDefault();resetView()}});
+/* ---------- database panel ---------- */
+const tbl=(el,cols,rows)=>{el.innerHTML='<tr>'+cols.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr>'+rows.map(r=>'<tr style="cursor:default">'+r.map(v=>`<td>${v===null?'<i>null</i>':esc(v)}</td>`).join('')+'</tr>').join('')};
+async function sessions(){const r=await api('/api/db/sessions');if(r.error){$('#dbi').textContent=r.error;$('#dbt').innerHTML='';return}$('#dbi').textContent=r.length+' session(s) in '+$('#dbp').value;
+const el=$('#dbt');el.innerHTML='<tr><th>ID</th><th>Started</th><th>Port</th><th>Baud</th><th>Records</th><th></th></tr>';
+r.forEach(s=>{const tr=document.createElement('tr');tr.style.cursor='default';tr.innerHTML=`<td>${s.id}</td><td>${new Date(s.started*1000).toLocaleString()}</td><td>${esc(s.port)}${s.vid?' ('+s.vid+':'+s.pid+')':''}</td><td>${s.baud} ${esc(s.frame)}</td><td>${s.n}</td><td class="wb"></td>`;
+const A=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.onclick=f;tr.lastChild.appendChild(b)};
+A('View / plot',()=>loadSession(s));A('CSV',()=>location.href='/api/db/export?fmt=csv&session='+s.id);A('JSON',()=>location.href='/api/db/export?fmt=json&session='+s.id);
+A('Delete',async()=>{if(confirm('Delete session '+s.id+'?')){await api('/api/db/delete',{session:s.id});sessions()}});el.appendChild(tr)})}
+async function loadSession(s){toast('Loading session '+s.id+'…');const r=await api('/api/db/records?session='+s.id+'&limit=100000');if(r.error)return toast(r.error,1);
+if(es)es.close();hist=true;resetView();mode=s.mode;H=r.r;n=r.r.length;if(out!=='plot')rebuildTable();if(out!=='print')H.forEach(feed);$('#cnt').textContent=n+' records';
+$('#ht').textContent=`Viewing stored session #${s.id} · ${s.port} · ${r.r.length} records (history)`;$('#hb').style.display='flex';$('#dbm').style.display='none';view.f=0;if(T0!==null){view.a=0;view.b=Math.max(lastT,1)}sched()}
+$('#live').onclick=()=>{hist=false;$('#hb').style.display='none';resetView();stream();view.f=1;if(connected)toast('Back to live')};
+$('#dbb').onclick=()=>{$('#dbm').style.display='flex';sessions()};$('#dbx').onclick=()=>$('#dbm').style.display='none';$('#dbr').onclick=sessions;
+$('#dbs').onclick=async()=>{const r=await api('/api/db/path',{path:$('#dbp').value});r.error?toast(r.error,1):(toast('Database path set'),sessions())};
+$('#runq').onclick=async()=>{const t0=performance.now(),r=await api('/api/db/query',{sql:$('#sql').value});if(r.error){$('#qi').textContent=r.error;$('#qt').innerHTML='';return}tbl($('#qt'),r.cols,r.rows);$('#qi').textContent=r.rows.length+' row(s)'+(r.truncated?' (truncated at 500)':'')+' · '+Math.round(performance.now()-t0)+' ms'};
+/* ---------- init ---------- */
+setBaud(115200);ports().then(()=>{stream();status()});setInterval(status,1000);setInterval(()=>{if(!connected)ports()},4000);
+</script></body></html>
